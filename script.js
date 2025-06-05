@@ -16,23 +16,38 @@ const mainTitle = document.getElementById("mainTitle");
 
 const utterance = new SpeechSynthesisUtterance();
 let voices = [];
-let currentMode = "tts"; 
+let currentMode = "tts";
 
 function loadVoices() {
   voices = speechSynthesis.getVoices();
+
   if (!voices.length) return;
+
+  const supportedLanguages = {
+    "en-US": "English (US)",
+    "hi-IN": "Hindi (India)",
+    "fr-FR": "French (France)",
+    "es-ES": "Spanish (Spain)"
+  };
+
   voiceSelect.innerHTML = "";
+
   voices.forEach((voice, index) => {
-    const option = document.createElement("option");
-    option.value = index;
-    option.textContent = `${voice.name} (${voice.lang})`;
-    voiceSelect.appendChild(option);
+    if (Object.keys(supportedLanguages).includes(voice.lang)) {
+      const option = document.createElement("option");
+      option.value = index;
+      option.textContent = `${supportedLanguages[voice.lang]} - ${voice.name}`;
+      voiceSelect.appendChild(option);
+    }
   });
-  utterance.voice = voices[0];
+
+  if (voiceSelect.options.length > 0) {
+    utterance.voice = voices[voiceSelect.value];
+    utterance.lang = utterance.voice.lang;
+  }
 }
 speechSynthesis.onvoiceschanged = loadVoices;
 loadVoices();
-
 
 speakBtn.addEventListener("click", () => {
   const text = textarea.value.trim();
@@ -40,6 +55,7 @@ speakBtn.addEventListener("click", () => {
   speechSynthesis.cancel();
   utterance.text = text;
   utterance.voice = voices[voiceSelect.value];
+  utterance.lang = utterance.voice.lang;
   utterance.pitch = parseFloat(pitchControl.value);
   utterance.rate = parseFloat(rateControl.value);
   speechSynthesis.speak(utterance);
@@ -49,8 +65,9 @@ pauseBtn.addEventListener("click", () => speechSynthesis.pause());
 resumeBtn.addEventListener("click", () => speechSynthesis.resume());
 stopBtn.addEventListener("click", () => speechSynthesis.cancel());
 clearBtn.addEventListener("click", () => {
-    textarea.value = "";
+  textarea.value = "";
 });
+
 const recognition = window.SpeechRecognition || window.webkitSpeechRecognition
   ? new (window.SpeechRecognition || window.webkitSpeechRecognition)()
   : null;
@@ -123,4 +140,3 @@ toggleModeBtn.addEventListener("click", () => {
     document.querySelectorAll(".tts-only").forEach(el => el.classList.remove("hidden"));
   }
 });
-
